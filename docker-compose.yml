@@ -1,0 +1,46 @@
+version: '2'
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  broker:
+    image: 'bitnami/kafka:latest'
+    container_name: broker
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    depends_on:
+      - zookeeper
+  controller:
+    build: 
+      context: ./controller
+      dockerfile: Dockerfile
+    container_name: controller
+    depends_on:
+      - zookeeper
+      - broker
+    environment:
+      KAFKA_URL: 'broker:9092'
+    restart: always
+  node:
+    build: 
+      context: ./node
+      dockerfile: Dockerfile
+    container_name: node
+    depends_on:
+      - zookeeper
+      - broker
+      - controller
+    environment:
+      KAFKA_URL: 'broker:9092'
+      HOSTNAME: 'sintering-martyrs'
+    restart: always

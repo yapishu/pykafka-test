@@ -1,0 +1,2 @@
+Data-Generator==1.0.1
+kafka-python==2.0.2
